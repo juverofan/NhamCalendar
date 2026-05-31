@@ -3,7 +3,7 @@ import { Bell, FileUp, Info, Share2 } from 'lucide-react-native';
 import React, { useCallback, useState } from 'react';
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { sendTestNotification } from '../utils/notifications';
-import { exportBackup, importBackup, loadEvents } from '../utils/storage';
+import { exportBackup, importBackup, importFromClipboard, loadEvents } from '../utils/storage';
 
 export default function SettingsScreen() {
   const [totalEvents, setTotalEvents] = useState(0);
@@ -44,7 +44,14 @@ export default function SettingsScreen() {
       return;
     }
 
-    Alert.alert("Đã lên lịch thông báo thử", "Thông báo thử sẽ xuất hiện sau khoảng 5 giây. Nếu không thấy banner, hãy kéo thanh thông báo xuống hoặc thử bấm Home để đưa app về nền.");
+    Alert.alert("Đã gửi thông báo thử", "Thông báo thử sẽ hiện ngay trên màn hình. Nếu không thấy, hãy kéo thanh thông báo xuống.");
+  };
+
+  const handleClipboardRestore = async () => {
+    const data = await importFromClipboard();
+    if (data) {
+      setTotalEvents(data.length);
+    }
   };
 
   return (
@@ -77,6 +84,11 @@ export default function SettingsScreen() {
       <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#2E7D32' }]} onPress={handleRestore}>
         <FileUp color="#fff" size={20} />
         <Text style={styles.btnText}>Khôi phục từ file</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#1565C0' }]} onPress={handleClipboardRestore}>
+        <FileUp color="#fff" size={20} />
+        <Text style={styles.btnText}>Dán từ clipboard</Text>
       </TouchableOpacity>
     </View>
   );

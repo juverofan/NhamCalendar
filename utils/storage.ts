@@ -1,8 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Clipboard from 'expo-clipboard';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
-import * as Sharing from 'expo-sharing';
-import { Alert } from 'react-native';
+import { Alert, Share } from 'react-native';
 import { scheduleEventNotifications } from './notifications';
 
 const STORAGE_KEY = '@nham_calendar_data_final';
@@ -100,24 +100,41 @@ export const exportBackup = async () => {
     }
 
     const jsonString = JSON.stringify(data, null, 2);
-    const now = new Date();
-    const fileName = `NhamCalendar_Backup_${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}.json`;
-    const fileUri = `${FileSystem.cacheDirectory}${fileName}`;
 
-    await FileSystem.writeAsStringAsync(fileUri, jsonString);
+    await Clipboard.setStringAsync(jsonString);
 
-    if (await Sharing.isAvailableAsync()) {
-      await Sharing.shareAsync(fileUri, { mimeType: 'application/json', dialogTitle: 'Lưu file backup' });
-      Alert.alert("Đã tạo file backup", "Hãy chọn Lưu vào tệp/Drive/Zalo hoặc ứng dụng bạn muốn trong màn chia sẻ để lưu file JSON.");
-    } else {
-      Alert.alert("Thông báo", "Thiết bị không hỗ trợ chia sẻ file backup.");
-    }
+    await Share.share({
+      message: jsonString,
+      title: 'NhamCalendar Backup',
+    });
+
+    Alert.alert("Đã sao chép", "Dữ liệu backup đã được sao chép vào clipboard và mở chia sẻ. Bạn có thể dán vào file ghi chú, Zalo, Messenger, email... để lưu trữ.");
   } catch (e: any) {
     Alert.alert("Lỗi hệ thống Export", e.message || String(e));
   }
 };
 
-// CÁCH TIẾP CẬN ĐÚNG CHUẨN CHO RESTORE
+const restoreFromJson = (jsonString: string): CalendarEvent[] | null => {
+  try {
+    const parsed = JSON.parse(jsonString);
+    const data = normalizeEvents(parsed);
+    return data;
+  } catch {
+    return null;
+  }
+};
+
+const applyRestoredEvents = async (data: CalendarEvent[]): Promise<CalendarEvent[] | null> => {
+  const success = await saveEvents(data);
+  if (success) {
+    Alert.alert("Thành công", `Đã khôi phục ${data.length} sự kiện!`);
+    return data;
+  } else {
+    Alert.alert("Lỗi", "Đọc được dữ liệu nhưng lưu vào bộ nhớ máy thất bại.");
+    return null;
+  }
+};
+
 export const importBackup = async () => {
   try {
     const res = await DocumentPicker.getDocumentAsync({
@@ -129,27 +146,42 @@ export const importBackup = async () => {
 
     if (res.assets && res.assets.length > 0) {
       const content = await FileSystem.readAsStringAsync(res.assets[0].uri);
+      const data = restoreFromJson(content);
 
-      try {
-        const parsed = JSON.parse(content);
-        const data = normalizeEvents(parsed);
-
-        if (data) {
-          const success = await saveEvents(data);
-          if (success) {
-            Alert.alert("Thành công", `Đã khôi phục ${data.length} sự kiện từ file!`);
-            return data;
-          } else {
-            Alert.alert("Lỗi", "Đọc được file nhưng lưu vào bộ nhớ máy thất bại.");
-          }
-        } else {
-          Alert.alert("Sai cấu trúc", "File JSON này không chứa danh sách sự kiện hợp lệ.");
-        }
-      } catch (parseError: any) {
-        Alert.alert("Lỗi Parse JSON", "Nội dung file bị hỏng hoặc không phải chuẩn JSON.");
+      if (data) {
+        return await applyRestoredEvents(data);
+      } else {
+        Alert.alert("Sai cấu trúc", "File JSON này không chứa danh sách sự kiện hợp lệ.");
       }
     }
     return null;
+  } catch (e: any) {
+    Alert.alert("Lỗi đọc file", "Không thể đọc file. Hãy thử dùng phương thức 'Dán từ clipboard'.");
+    return null;
+  }
+};
+
+export const importFromClipboard = async () => {
+  try {
+    const hasString = await Clipboard.hasStringAsync();
+    if (!hasString) {
+      Alert.alert("Clipboard trống", "Hãy sao chép nội dung JSON backup trước.");
+      return null;
+    }
+
+    const text = await Clipboard.getStringAsync();
+    if (!text) {
+      Alert.alert("Clipboard trống", "Không có nội dung trong clipboard.");
+      return null;
+    }
+
+    const data = restoreFromJson(text);
+    if (data) {
+      return await applyRestoredEvents(data);
+    } else {
+      Alert.alert("Sai cấu trúc", "Nội dung clipboard không chứa danh sách sự kiện hợp lệ.");
+      return null;
+    }
   } catch (e: any) {
     Alert.alert("Lỗi hệ thống Import", e.message || String(e));
     return null;

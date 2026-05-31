@@ -13,7 +13,7 @@ Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldPlaySound: true,
     shouldSetBadge: false,
-    shouldShowBanner: true,
+    shouldShowAlert: true,
     shouldShowList: true,
   }),
 });
@@ -133,20 +133,13 @@ export const sendTestNotification = async () => {
   const granted = await ensureNotificationPermissions();
   if (!granted) return false;
 
-  const triggerDate = new Date(Date.now() + 5000);
-
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title: 'Nhảm Calendar',
-      body: 'Thông báo thử sẽ hiện trong khay thông báo của Android.',
-      sound: true,
-      priority: Notifications.AndroidNotificationPriority.MAX,
-    },
-    trigger: {
-      channelId: TEST_CHANNEL_ID,
-      date: triggerDate,
-    } as any,
-  });
+  await Notifications.presentNotificationAsync({
+    title: 'Nhảm Calendar',
+    body: 'Thông báo thử nghiệm thành công!',
+    sound: true,
+    priority: Notifications.AndroidNotificationPriority.MAX,
+    channelId: TEST_CHANNEL_ID,
+  } as any);
 
   return true;
 };
