@@ -5,7 +5,7 @@ import type { CalendarEvent } from './storage';
 
 const NOTIFICATION_PREFIX = 'event-reminder-';
 const REMINDER_CHANNEL_ID = 'event-reminders-v2';
-const TEST_CHANNEL_ID = 'test-notifications-v2';
+const TEST_CHANNEL_ID = 'test-notifications-v5';
 const DAYS_BEFORE = 5;
 const REMINDER_HOUR = 8;
 
@@ -14,6 +14,7 @@ Notifications.setNotificationHandler({
     shouldPlaySound: true,
     shouldSetBadge: false,
     shouldShowAlert: true,
+    shouldShowBanner: true,
     shouldShowList: true,
   }),
 });
@@ -39,12 +40,14 @@ export const setupNotificationChannel = async () => {
 
 export const ensureNotificationPermissions = async () => {
   await setupNotificationChannel();
-
-  const current = await Notifications.getPermissionsAsync();
-  if (current.granted) return true;
-
-  const requested = await Notifications.requestPermissionsAsync();
-  return requested.granted;
+  try {
+    const current = await Notifications.getPermissionsAsync();
+    if (current.granted) return true;
+    const requested = await Notifications.requestPermissionsAsync();
+    return requested.granted;
+  } catch {
+    return true; // Nếu lỗi, cứ cho qua để thử gửi
+  }
 };
 
 const atEight = (date: Date) => {
@@ -116,12 +119,13 @@ export const scheduleEventNotifications = async (events: CalendarEvent[]) => {
           title: `Nhắc sự kiện: ${event.title}`,
           body: reminderBody(eventDate, daysLeft),
           sound: true,
+          channelId: REMINDER_CHANNEL_ID,
           data: { eventId: event.id, eventDate: eventDate.toISOString(), daysLeft },
         },
         trigger: {
-          channelId: REMINDER_CHANNEL_ID,
+          type: 'date',
           date: triggerDate,
-        } as any,
+        },
       });
     }
   }
@@ -129,17 +133,25 @@ export const scheduleEventNotifications = async (events: CalendarEvent[]) => {
   return true;
 };
 
+export const openNotificationSettings = async () => {
+  if (Platform.OS === 'android') {
+    await Notifications.openSettingsAsync();
+  }
+};
+
 export const sendTestNotification = async () => {
-  const granted = await ensureNotificationPermissions();
-  if (!granted) return false;
+  try {
+    await setupNotificationChannel();
 
-  await Notifications.presentNotificationAsync({
-    title: 'Nhảm Calendar',
-    body: 'Thông báo thử nghiệm thành công!',
-    sound: true,
-    priority: Notifications.AndroidNotificationPriority.MAX,
-    channelId: TEST_CHANNEL_ID,
-  } as any);
+    await Notifications.presentNotificationAsync({
+      title: 'Nhảm Calendar',
+      body: 'Thông báo thử nghiệm thành công!',
+      data: { test: true },
+    });
 
-  return true;
+    return { success: true };
+  } catch (e: any) {
+    console.error(e);
+    return { success: false, error: e.message || String(e) };
+  }
 };

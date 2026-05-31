@@ -1,12 +1,13 @@
 import { useFocusEffect } from 'expo-router';
-import { Bell, FileUp, Info, Share2 } from 'lucide-react-native';
+import { Bell, Info, Share2 } from 'lucide-react-native';
 import React, { useCallback, useState } from 'react';
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View, ScrollView } from 'react-native';
 import { sendTestNotification } from '../utils/notifications';
-import { exportBackup, importBackup, importFromClipboard, loadEvents } from '../utils/storage';
+import { exportBackup, importBackupFromText, loadEvents } from '../utils/storage';
 
 export default function SettingsScreen() {
   const [totalEvents, setTotalEvents] = useState(0);
+  const [importText, setImportText] = useState('');
 
   useFocusEffect(
     useCallback(() => {
@@ -18,44 +19,29 @@ export default function SettingsScreen() {
     await exportBackup();
   };
 
-  const handleRestore = async () => {
-    Alert.alert(
-      "Xác nhận",
-      "Hành động này sẽ ghi đè dữ liệu hiện tại bằng file backup. Tiếp tục?",
-      [
-        { text: "Hủy", style: "cancel" },
-        { 
-          text: "Đồng ý", 
-          onPress: async () => {
-            const data = await importBackup();
-            if (data) {
-              setTotalEvents(data.length);
-            }
-          } 
-        }
-      ]
-    );
+  const handleRestoreFromText = async () => {
+    if (!importText.trim()) {
+      Alert.alert("Thông báo", "Vui lòng dán nội dung backup vào ô nhập liệu.");
+      return;
+    }
+    const data = await importBackupFromText(importText);
+    if (data) {
+      setTotalEvents(data.length);
+      setImportText('');
+    }
   };
 
   const handleTestNotification = async () => {
-    const success = await sendTestNotification();
-    if (!success) {
-      Alert.alert("Chưa được cấp quyền", "Vui lòng cho phép thông báo trong cài đặt hệ thống của điện thoại.");
+    const result = await sendTestNotification();
+    if (!result.success) {
+      Alert.alert("Lỗi gửi thông báo", `Hệ thống báo lỗi: ${result.error}\n\nHãy thử kiểm tra lại quyền thông báo trong Cài đặt.`);
       return;
     }
-
-    Alert.alert("Đã gửi thông báo thử", "Thông báo thử sẽ hiện ngay trên màn hình. Nếu không thấy, hãy kéo thanh thông báo xuống.");
-  };
-
-  const handleClipboardRestore = async () => {
-    const data = await importFromClipboard();
-    if (data) {
-      setTotalEvents(data.length);
-    }
+    Alert.alert("Đã gửi thông báo thử", "Thông báo sẽ xuất hiện ngay. Nếu không thấy, hãy kéo thanh thông báo xuống.");
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <Text style={styles.sectionTitle}>Thông tin bộ nhớ</Text>
       
       <View style={styles.card}>
@@ -68,12 +54,12 @@ export default function SettingsScreen() {
           </View>
         </View>
       </View>
-
+  
       <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#D32F2F' }]} onPress={handleTestNotification}>
         <Bell color="#fff" size={20} />
         <Text style={styles.btnText}>Bật / thử thông báo</Text>
       </TouchableOpacity>
-
+  
       <Text style={styles.sectionTitle}>Sao lưu & Phục hồi</Text>
       
       <TouchableOpacity style={styles.actionBtn} onPress={handleExport}>
@@ -81,16 +67,20 @@ export default function SettingsScreen() {
         <Text style={styles.btnText}>Xuất file Backup (.json)</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#2E7D32' }]} onPress={handleRestore}>
-        <FileUp color="#fff" size={20} />
-        <Text style={styles.btnText}>Khôi phục từ file</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#1565C0' }]} onPress={handleClipboardRestore}>
-        <FileUp color="#fff" size={20} />
-        <Text style={styles.btnText}>Dán từ clipboard</Text>
-      </TouchableOpacity>
-    </View>
+      <View style={styles.textRestoreContainer}>
+        <Text style={styles.restoreLabel}>Hoặc dán nội dung JSON backup vào đây:</Text>
+        <TextInput 
+          style={styles.importInput} 
+          value={importText} 
+          onChangeText={setImportText} 
+          placeholder="Dán nội dung JSON vào đây..."
+          multiline
+        />
+        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#1565C0' }]} onPress={handleRestoreFromText}>
+          <Text style={styles.btnText}>Khôi phục từ văn bản</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
   );
 }
 
@@ -105,4 +95,7 @@ const styles = StyleSheet.create({
   hint: { fontSize: 12, color: '#777', marginTop: 6, lineHeight: 18 },
   actionBtn: { backgroundColor: '#1565C0', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 15, borderRadius: 10, marginTop: 12 },
   btnText: { color: '#fff', fontWeight: 'bold', marginLeft: 10, fontSize: 16 },
+  textRestoreContainer: { marginTop: 20, padding: 15, backgroundColor: '#fff', borderRadius: 12, elevation: 2 },
+  restoreLabel: { fontSize: 13, color: '#666', marginBottom: 10, fontWeight: 'bold' },
+  importInput: { backgroundColor: '#f0f0f0', borderRadius: 8, padding: 10, height: 100, textAlignVertical: 'top', fontSize: 12, fontFamily: 'monospace' },
 });
