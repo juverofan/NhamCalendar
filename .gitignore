@@ -11,6 +11,8 @@ expo-env.d.ts
 
 # Native
 .kotlin/
+/android/
+/ios/
 *.orig.*
 *.jks
 *.p8
@@ -26,6 +28,16 @@ npm-debug.*
 yarn-debug.*
 yarn-error.*
 
+# build outputs and archives
+*.apk
+*.aab
+*.apks
+*.ipa
+*.7z
+*.zip
+*.tar
+*.tar.gz
+
 # macOS
 .DS_Store
 *.pem
@@ -38,6 +50,5 @@ yarn-error.*
 
 app-example
 
-# generated native folders
-/ios
-/android
+# local duplicate/exported folders
+/NhamCalendar/

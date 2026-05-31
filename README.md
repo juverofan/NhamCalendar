@@ -1,50 +1,112 @@
-# Welcome to your Expo app 👋
+# NhamCalendar
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+NhamCalendar la ung dung lich am duong Viet Nam duoc xay dung bang Expo/React Native. App tap trung vao xem ngay gio, thong tin am lich, tiet khi, ngay dac biet va quan ly su kien ca nhan theo ca lich duong lan lich am.
 
-## Get started
+## Tinh Nang Chinh
 
-1. Install dependencies
+- Xem ngay hien tai, gio hien tai va can chi cua gio/ngay/thang/nam.
+- Xem lich thang, ngay duong va ngay am.
+- Chon mot ngay trong lich thang de xem chi tiet.
+- Quay ve ngay hien tai nhanh bang tab `Hom nay` hoac nut `Ve hom nay`.
+- Hien thi ngay le, tiet khi va ngay dac biet trong nam.
+- Them/xoa su kien ca nhan theo lich duong hoac lich am.
+- Bao su kien sap toi trong vong 7 ngay tren man hinh ngay.
+- Nhac thong bao luc 08:00, tu truoc 5 ngay den dung ngay su kien.
+- Sao luu danh sach su kien ra file JSON.
+- Khoi phuc danh sach su kien tu file JSON.
+- Tu dong doc/merge du lieu cu khi nang cap app de tranh mat cau hinh/su kien.
 
-   ```bash
-   npm install
-   ```
+## Cong Nghe
 
-2. Start the app
+- Expo SDK 54
+- React Native 0.81
+- React 19
+- Expo Router
+- AsyncStorage
+- Expo Notifications
+- Expo File System
+- Expo Sharing
+- Expo Document Picker
+- vietnamese-lunar-calendar
 
-   ```bash
-   npx expo start
-   ```
+## Cau Truc Chinh
 
-In the output, you'll find options to open the app in a
+- `app/index.tsx`: man hinh ngay, hien thi ngay duong/am, can chi, su kien va nut ve hom nay.
+- `app/month.tsx`: man hinh lich thang.
+- `app/events.tsx`: quan ly su kien ca nhan.
+- `app/settings.tsx`: thong tin bo nho, backup/restore va test notification.
+- `utils/lunar.ts`: tinh thong tin am lich va can chi.
+- `utils/storage.ts`: luu/tai su kien, migration du lieu cu, backup/restore.
+- `utils/notifications.ts`: xin quyen, tao channel va lap lich notification.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Du Lieu Va Nang Cap
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+App hien luu su kien trong AsyncStorage voi key `@nham_calendar_data_final`.
 
-## Get a fresh project
+De dam bao cai de ban moi khong mat du lieu cu, app van doc key cu `@nham_calendar_events`, merge vao key moi va giu lai du lieu hop le. Khong doi `android.package`/`applicationId`: `com.nhamstudio.calendar`.
 
-When you're ready, run:
+## Cai Dat Moi Truong
 
 ```bash
-npm run reset-project
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Chay app khi phat trien:
 
-## Learn more
+```bash
+npm run start
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+Chay tren Android development build:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+npm run android
+```
 
-## Join the community
+## Kiem Tra
 
-Join our community of developers creating universal apps.
+```bash
+npm run lint
+npx tsc --noEmit
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Build APK Release
+
+Neu chua co native Android project:
+
+```bash
+npx expo prebuild --platform android
+```
+
+Build APK release:
+
+```bash
+cd android
+.\gradlew.bat assembleRelease
+```
+
+APK universal release nam tai:
+
+```text
+android/app/build/outputs/apk/release/app-universal-release.apk
+```
+
+Co the copy ra thu muc goc voi ten:
+
+```text
+NhamCalendar.apk
+```
+
+Luu y: file APK la build artifact, khong nen commit len GitHub. Neu can phat hanh APK, hay dua file len GitHub Releases.
+
+## Version Hien Tai
+
+- App version: `1.2.1`
+- Android versionCode: `121`
+- Android package: `com.nhamstudio.calendar`
+
+## Ghi Chu Backup/Restore
+
+Backup tao file JSON tu du lieu su kien ca nhan. Tren Android, app tao file tam trong cache va mo bang chia se/luu file cua he thong de nguoi dung chon noi luu.
+
+Restore chi chap nhan file JSON co danh sach su kien hop le. Khi restore thanh cong, app se luu lai du lieu va lap lich notification moi.

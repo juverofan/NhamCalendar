@@ -123,13 +123,18 @@ export const sendTestNotification = async () => {
   const granted = await ensureNotificationPermissions();
   if (!granted) return false;
 
+  const triggerDate = new Date(Date.now() + 3000);
+
   await Notifications.scheduleNotificationAsync({
     content: {
       title: 'Nhảm Calendar',
-      body: 'Thông báo đã được bật thành công.',
+      body: 'Đây là thông báo thử nghiệm.',
       sound: true,
     },
-    trigger: null,
+    trigger: {
+      channelId: 'event-reminders',
+      date: triggerDate,
+    } as any,
   });
 
   return true;

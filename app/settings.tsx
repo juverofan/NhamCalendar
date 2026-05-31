@@ -41,7 +41,10 @@ export default function SettingsScreen() {
     const success = await sendTestNotification();
     if (!success) {
       Alert.alert("Chưa được cấp quyền", "Vui lòng cho phép thông báo trong cài đặt hệ thống của điện thoại.");
+      return;
     }
+
+    Alert.alert("Đã bật thông báo", "Thông báo thử sẽ xuất hiện sau khoảng 3 giây.");
   };
 
   return (

@@ -1,8 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as DocumentPicker from 'expo-document-picker';
-import * as FileSystem from 'expo-file-system/legacy';
+import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
-import { Alert, Platform } from 'react-native';
+import { Alert } from 'react-native';
 import { scheduleEventNotifications } from './notifications';
 
 const STORAGE_KEY = '@nham_calendar_data_final';
@@ -91,7 +91,6 @@ export const saveEvents = async (events: CalendarEvent[], syncNotifications = tr
   }
 };
 
-// CÁCH TIẾP CẬN ĐÚNG CHUẨN SAF CHO EXPORT
 export const exportBackup = async () => {
   try {
     const data = await loadEvents();
@@ -103,28 +102,14 @@ export const exportBackup = async () => {
     const jsonString = JSON.stringify(data, null, 2);
     const now = new Date();
     const fileName = `NhamCalendar_Backup_${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}.json`;
+    const file = new File(Paths.cache, fileName);
 
-    if (Platform.OS === 'android') {
-      const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+    file.create({ overwrite: true });
+    file.write(jsonString);
 
-      if (permissions.granted) {
-        const uri = await FileSystem.StorageAccessFramework.createFileAsync(
-          permissions.directoryUri,
-          fileName,
-          'application/json'
-        );
-
-        await FileSystem.StorageAccessFramework.writeAsStringAsync(uri, jsonString);
-
-        Alert.alert("Thành công", "File đã được lưu thành công vào thư mục bạn chọn!");
-        return;
-      }
-    }
-
-    const fileUri = `${FileSystem.cacheDirectory}${fileName}`;
-    await FileSystem.writeAsStringAsync(fileUri, jsonString);
     if (await Sharing.isAvailableAsync()) {
-      await Sharing.shareAsync(fileUri, { mimeType: 'application/json', dialogTitle: 'Xuất file backup' });
+      await Sharing.shareAsync(file.uri, { mimeType: 'application/json', dialogTitle: 'Lưu file backup' });
+      Alert.alert("Đã tạo file backup", "Nếu bạn đã chọn nơi lưu trong màn chia sẻ, file backup đã được lưu ở đó.");
     } else {
       Alert.alert("Thông báo", "Thiết bị không hỗ trợ chia sẻ file backup.");
     }
@@ -144,9 +129,8 @@ export const importBackup = async () => {
     if (res.canceled) return null;
 
     if (res.assets && res.assets.length > 0) {
-      const fileUri = res.assets[0].uri;
-
-      const content = await FileSystem.readAsStringAsync(fileUri);
+      const file = new File(res.assets[0].uri);
+      const content = await file.text();
 
       try {
         const parsed = JSON.parse(content);
