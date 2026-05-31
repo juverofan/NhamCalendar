@@ -2,7 +2,7 @@
   "expo": {
     "name": "Nhảm Calendar",
     "slug": "nham-calendar",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "userInterfaceStyle": "light",
@@ -20,7 +20,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.nhamstudio.calendar",
-      "versionCode": 121,
+      "versionCode": 122,
       "permissions": [
         "android.permission.POST_NOTIFICATIONS",
         "READ_EXTERNAL_STORAGE",

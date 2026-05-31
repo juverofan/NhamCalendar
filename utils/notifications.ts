@@ -4,6 +4,8 @@ import { getFullLunarInfo } from './lunar';
 import type { CalendarEvent } from './storage';
 
 const NOTIFICATION_PREFIX = 'event-reminder-';
+const REMINDER_CHANNEL_ID = 'event-reminders-v2';
+const TEST_CHANNEL_ID = 'test-notifications-v2';
 const DAYS_BEFORE = 5;
 const REMINDER_HOUR = 8;
 
@@ -19,11 +21,19 @@ Notifications.setNotificationHandler({
 export const setupNotificationChannel = async () => {
   if (Platform.OS !== 'android') return;
 
-  await Notifications.setNotificationChannelAsync('event-reminders', {
+  await Notifications.setNotificationChannelAsync(REMINDER_CHANNEL_ID, {
     name: 'Nhắc sự kiện',
     importance: Notifications.AndroidImportance.HIGH,
     vibrationPattern: [0, 250, 250, 250],
     lightColor: '#D32F2F',
+  });
+
+  await Notifications.setNotificationChannelAsync(TEST_CHANNEL_ID, {
+    name: 'Thông báo thử',
+    importance: Notifications.AndroidImportance.MAX,
+    vibrationPattern: [0, 500, 250, 500],
+    lightColor: '#D32F2F',
+    sound: 'default',
   });
 };
 
@@ -109,7 +119,7 @@ export const scheduleEventNotifications = async (events: CalendarEvent[]) => {
           data: { eventId: event.id, eventDate: eventDate.toISOString(), daysLeft },
         },
         trigger: {
-          channelId: 'event-reminders',
+          channelId: REMINDER_CHANNEL_ID,
           date: triggerDate,
         } as any,
       });
@@ -123,16 +133,17 @@ export const sendTestNotification = async () => {
   const granted = await ensureNotificationPermissions();
   if (!granted) return false;
 
-  const triggerDate = new Date(Date.now() + 3000);
+  const triggerDate = new Date(Date.now() + 5000);
 
   await Notifications.scheduleNotificationAsync({
     content: {
       title: 'Nhảm Calendar',
-      body: 'Đây là thông báo thử nghiệm.',
+      body: 'Thông báo thử sẽ hiện trong khay thông báo của Android.',
       sound: true,
+      priority: Notifications.AndroidNotificationPriority.MAX,
     },
     trigger: {
-      channelId: 'event-reminders',
+      channelId: TEST_CHANNEL_ID,
       date: triggerDate,
     } as any,
   });

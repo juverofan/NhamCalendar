@@ -44,7 +44,7 @@ export default function SettingsScreen() {
       return;
     }
 
-    Alert.alert("Đã bật thông báo", "Thông báo thử sẽ xuất hiện sau khoảng 3 giây.");
+    Alert.alert("Đã lên lịch thông báo thử", "Thông báo thử sẽ xuất hiện sau khoảng 5 giây. Nếu không thấy banner, hãy kéo thanh thông báo xuống hoặc thử bấm Home để đưa app về nền.");
   };
 
   return (

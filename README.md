@@ -101,8 +101,8 @@ Lưu ý: file APK là build artifact, không nên commit lên GitHub. Nếu cầ
 
 ## Version Hiện Tại
 
-- App version: `1.2.1`
-- Android versionCode: `121`
+- App version: `1.2.2`
+- Android versionCode: `122`
 - Android package: `com.nhamstudio.calendar`
 
 ## Ghi Chú Backup/Restore

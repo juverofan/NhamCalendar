@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as DocumentPicker from 'expo-document-picker';
-import { File, Paths } from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { Alert } from 'react-native';
 import { scheduleEventNotifications } from './notifications';
@@ -102,14 +102,13 @@ export const exportBackup = async () => {
     const jsonString = JSON.stringify(data, null, 2);
     const now = new Date();
     const fileName = `NhamCalendar_Backup_${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}.json`;
-    const file = new File(Paths.cache, fileName);
+    const fileUri = `${FileSystem.cacheDirectory}${fileName}`;
 
-    file.create({ overwrite: true });
-    file.write(jsonString);
+    await FileSystem.writeAsStringAsync(fileUri, jsonString);
 
     if (await Sharing.isAvailableAsync()) {
-      await Sharing.shareAsync(file.uri, { mimeType: 'application/json', dialogTitle: 'Lưu file backup' });
-      Alert.alert("Đã tạo file backup", "Nếu bạn đã chọn nơi lưu trong màn chia sẻ, file backup đã được lưu ở đó.");
+      await Sharing.shareAsync(fileUri, { mimeType: 'application/json', dialogTitle: 'Lưu file backup' });
+      Alert.alert("Đã tạo file backup", "Hãy chọn Lưu vào tệp/Drive/Zalo hoặc ứng dụng bạn muốn trong màn chia sẻ để lưu file JSON.");
     } else {
       Alert.alert("Thông báo", "Thiết bị không hỗ trợ chia sẻ file backup.");
     }
@@ -129,8 +128,7 @@ export const importBackup = async () => {
     if (res.canceled) return null;
 
     if (res.assets && res.assets.length > 0) {
-      const file = new File(res.assets[0].uri);
-      const content = await file.text();
+      const content = await FileSystem.readAsStringAsync(res.assets[0].uri);
 
       try {
         const parsed = JSON.parse(content);
