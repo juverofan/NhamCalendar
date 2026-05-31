@@ -71,9 +71,17 @@ export const saveEvents = async (events: CalendarEvent[], syncNotifications = tr
   try {
     const normalized = removeDuplicateEvents(events);
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
-    if (syncNotifications) await scheduleEventNotifications(normalized);
+    
+    if (syncNotifications) {
+      try {
+        await scheduleEventNotifications(normalized);
+      } catch (notificationError) {
+        console.error("Lỗi lập lịch thông báo nhưng vẫn lưu data:", notificationError);
+      }
+    }
     return true;
   } catch (e) {
+    console.error("Lỗi lưu dữ liệu:", e);
     return false;
   }
 };

@@ -1,5 +1,5 @@
 import * as Notifications from 'expo-notifications';
-import { Platform } from 'react-native';
+import { Linking, Platform } from 'react-native';
 import { getFullLunarInfo } from './lunar';
 import type { CalendarEvent } from './storage';
 
@@ -119,12 +119,12 @@ export const scheduleEventNotifications = async (events: CalendarEvent[]) => {
           title: `Nhắc sự kiện: ${event.title}`,
           body: reminderBody(eventDate, daysLeft),
           sound: true,
-          channelId: REMINDER_CHANNEL_ID,
           data: { eventId: event.id, eventDate: eventDate.toISOString(), daysLeft },
         },
         trigger: {
-          type: 'date',
+          type: Notifications.SchedulableTriggerInputTypes.DATE,
           date: triggerDate,
+          channelId: REMINDER_CHANNEL_ID,
         },
       });
     }
@@ -135,7 +135,7 @@ export const scheduleEventNotifications = async (events: CalendarEvent[]) => {
 
 export const openNotificationSettings = async () => {
   if (Platform.OS === 'android') {
-    await Notifications.openSettingsAsync();
+    await Linking.openSettings();
   }
 };
 
@@ -143,10 +143,18 @@ export const sendTestNotification = async () => {
   try {
     await setupNotificationChannel();
 
-    await Notifications.presentNotificationAsync({
-      title: 'Nhảm Calendar',
-      body: 'Thông báo thử nghiệm thành công!',
-      data: { test: true },
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: 'Nhảm Calendar',
+        body: 'Thông báo thử nghiệm thành công!',
+        sound: true,
+        priority: Notifications.AndroidNotificationPriority.MAX,
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: 1,
+        channelId: TEST_CHANNEL_ID,
+      },
     });
 
     return { success: true };
